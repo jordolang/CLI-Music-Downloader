@@ -6,6 +6,9 @@
 [![Shell](https://img.shields.io/badge/shell-zsh%20%7C%20bash-green.svg)](https://www.zsh.org/)
 [![License](https://img.shields.io/badge/license-MIT-orange.svg)](LICENSE)
 
+By The Way! This is my first major software release. If you enjoyed this tool please consider donating via the following link:
+<script type="text/javascript" src="https://cdnjs.buymeacoffee.com/1.0.0/button.prod.min.js" data-name="bmc-button" data-slug="jordolang" data-color="#FFDD00" data-emoji="☕"  data-font="Poppins" data-text="Buy me a coffee" data-outline-color="#000000" data-font-color="#000000" data-coffee-color="#ffffff" ></script>
+
 ## ✨ Features
 
 - 🎵 **High-quality music downloads** from YouTube with optimal audio extraction
