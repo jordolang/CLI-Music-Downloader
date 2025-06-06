@@ -1,0 +1,155 @@
+#!/Users/jordanlang/.local/pipx/venvs/instantmusic/bin/python
+
+import sys
+import os
+import requests
+import eyed3
+from urllib.parse import quote_plus as qp
+
+def grab_albumart(artist, track, album=''):
+    """
+    Improved album art fetching using multiple sources like fixalbumart would.
+    """
+    import json
+    
+    # Clean up the search terms
+    artist = artist.strip()
+    track = track.strip()
+    
+    print(f"Searching for album art: {artist} - {track}")
+    
+    # Try iTunes API first (most reliable)
+    try:
+        itunes_url = f"https://itunes.apple.com/search?term={qp(f'{artist} {track}')}&media=music&limit=1"
+        print(f"Trying iTunes API: {itunes_url}")
+        response = requests.get(itunes_url, timeout=10)
+        data = response.json()
+        
+        if data.get('results'):
+            artwork_url = data['results'][0].get('artworkUrl100', '')
+            if artwork_url:
+                # Get higher resolution version
+                artwork_url = artwork_url.replace('100x100', '600x600')
+                print(f"Found iTunes artwork: {artwork_url}")
+                return artwork_url
+    except Exception as e:
+        print(f"iTunes API failed: {e}")
+    
+    print("iTunes API didn't work, falling back to Google Images")
+    
+    # Fallback to Google Images search
+    try:
+        search_term = f"{artist} {track} album cover"
+        search_url = f"https://www.google.com/search?tbm=isch&q={qp(search_term)}"
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+        }
+        print(f"Trying Google Images: {search_url}")
+        response = requests.get(search_url, headers=headers, timeout=10)
+        content = response.text
+        
+        # Look for image URLs in the response
+        import re
+        image_urls = re.findall(r'"(https?://[^"]*\.(?:jpg|jpeg|png|webp))', content)
+        print(f"Found {len(image_urls)} potential image URLs")
+        
+        for i, url in enumerate(image_urls[:5]):  # Try first 5 images
+            try:
+                print(f"Testing image {i+1}: {url[:60]}...")
+                # Test if image is accessible and reasonable size
+                img_response = requests.head(url, timeout=5)
+                if img_response.status_code == 200:
+                    content_length = img_response.headers.get('content-length')
+                    if content_length and 1000 < int(content_length) < 5000000:  # Between 1KB and 5MB
+                        print(f"Found good image: {url}")
+                        return url
+            except Exception as e:
+                print(f"Image {i+1} failed: {e}")
+                continue
+    except Exception as e:
+        print(f"Google Images search failed: {e}")
+    
+    print("No album art found")
+    return None
+
+def fix_album_art(mp3_file, artist=None, track=None):
+    """
+    Fix album art for a given MP3 file
+    """
+    print(f"Processing: {mp3_file}")
+    
+    try:
+        audiofile = eyed3.load(mp3_file)
+        if not audiofile:
+            print("Could not load audio file")
+            return False
+            
+        # If artist/track not provided, try to get from filename
+        if not artist or not track:
+            filename = os.path.basename(mp3_file)
+            if ' - ' in filename:
+                parts = filename.replace('.mp3', '').split(' - ', 1)
+                artist = artist or parts[0].strip()
+                track = track or parts[1].strip()
+            else:
+                print("Please provide artist and track names")
+                return False
+        
+        print(f"Artist: {artist}")
+        print(f"Track: {track}")
+        
+        # Get album art URL
+        image_url = grab_albumart(artist, track)
+        
+        if not image_url:
+            print("No album art found")
+            return False
+            
+        # Download and add album art
+        print("Downloading album art...")
+        response = requests.get(image_url, timeout=10)
+        if response.status_code == 200:
+            imagedata = response.content
+            
+            # Determine image format
+            image_format = "image/jpeg"
+            if image_url.lower().endswith('.png'):
+                image_format = "image/png"
+            elif image_url.lower().endswith('.webp'):
+                image_format = "image/webp"
+            
+            # Set up tags if needed
+            eyed3.log.setLevel("ERROR")
+            if audiofile.tag is None:
+                audiofile.tag = eyed3.id3.Tag()
+                audiofile.tag.file_info = eyed3.id3.FileInfo("foo.id3")
+            
+            # Add album art
+            audiofile.tag.images.set(0, imagedata, image_format, "Album Art")
+            audiofile.tag.save()
+            print('Album art added successfully!')
+            return True
+        else:
+            print(f'Failed to download album art: HTTP {response.status_code}')
+            return False
+            
+    except Exception as e:
+        print(f'Error: {e}')
+        return False
+
+if __name__ == '__main__':
+    if len(sys.argv) < 2:
+        print("Usage: python fix_album_art.py <mp3_file> [artist] [track]")
+        sys.exit(1)
+    
+    mp3_file = sys.argv[1]
+    artist = sys.argv[2] if len(sys.argv) > 2 else None
+    track = sys.argv[3] if len(sys.argv) > 3 else None
+    
+    if not os.path.exists(mp3_file):
+        print(f"File not found: {mp3_file}")
+        sys.exit(1)
+    
+    success = fix_album_art(mp3_file, artist, track)
+    sys.exit(0 if success else 1)
+

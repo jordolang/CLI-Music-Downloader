@@ -1,0 +1,18 @@
+# CLI Music Downloader Dependencies
+# Install with: pip install -r requirements.txt
+
+# Core music downloading
+instantmusic>=2.3
+
+# ID3 tag manipulation and album art embedding
+eyed3>=0.9.6
+
+# HTTP requests for album art fetching
+requests>=2.25.1
+
+# YouTube audio extraction (automatically installed with instantmusic)
+# yt-dlp>=2023.1.6
+
+# Optional: Better audio quality processing
+# mutagen>=1.45.1
+

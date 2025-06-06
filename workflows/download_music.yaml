@@ -1,0 +1,25 @@
+---
+name: "Download Music with Album Art"
+description: "Download a song using download_music with album artwork, automatically organized by artist in ~/Music"
+command: |-
+  mkdir -p ~/Music
+  download_music "{{song_query}}"
+arguments:
+  - name: "song_query"
+    description: "Artist and song name (e.g., 'The Beatles Hey Jude', 'Queen Bohemian Rhapsody')"
+    default_value: ""
+tags:
+  - "music"
+  - "download"
+  - "audio"
+  - "youtube"
+examples:
+  - command: "mkdir -p ~/Music && download_music 'The Beatles Hey Jude'"
+    description: "Download Hey Jude by The Beatles"
+  - command: "mkdir -p ~/Music && download_music 'Pink Floyd Comfortably Numb'"
+    description: "Download Comfortably Numb by Pink Floyd"
+  - command: "mkdir -p ~/Music && download_music 'Queen Bohemian Rhapsody'"
+    description: "Download Bohemian Rhapsody by Queen"
+author: "Enhanced download_music workflow"
+version: "2.0"
+

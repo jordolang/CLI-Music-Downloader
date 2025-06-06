@@ -1,0 +1,121 @@
+#!/bin/bash
+# Enhanced music downloader script for Warp Workflow
+# Downloads music with album art and organizes it by artist in ~/Music
+
+set -euo pipefail
+
+# Function to display usage
+show_usage() {
+    echo "🎵 Music Downloader with Album Art Organization"
+    echo "Usage: download_music <artist> <song>"
+    echo "   or: download_music '<artist> <song>'"
+    echo ""
+    echo "Examples:"
+    echo "  download_music The Beatles Hey Jude"
+    echo "  download_music 'Pink Floyd Comfortably Numb'"
+    echo "  download_music Queen 'Bohemian Rhapsody'"
+    echo ""
+    echo "Files will be organized as: ~/Music/<Artist>/<Song>.mp3"
+}
+
+# Check arguments
+if [ $# -eq 0 ]; then
+    show_usage
+    exit 1
+fi
+
+# Handle different argument formats
+if [ $# -eq 1 ]; then
+    # Single argument - treat as full search term
+    search_term="$1"
+else
+    # Multiple arguments - join them
+    search_term="$*"
+fi
+
+# Create Music directory if it doesn't exist
+mkdir -p "$HOME/Music"
+
+echo "🔍 Searching for: $search_term"
+echo "📁 Music will be organized in: ~/Music/<Artist>/<Song>.mp3"
+echo "🎨 Album artwork will be automatically added using improved processor"
+echo ""
+
+# Store the original directory
+original_dir=$(pwd)
+
+# Find all MP3 files before download
+echo "📊 Scanning existing MP3 files..."
+before_files=()
+while IFS= read -r -d '' file; do
+    before_files+=("$file")
+done < <(find "$HOME/Music" -name "*.mp3" -print0 2>/dev/null || true)
+
+# Run instantmusic with the search term (disable built-in album art to avoid errors)
+echo "🎵 Downloading audio..."
+instantmusic -q -s "$search_term"
+
+# Find new MP3 files after download
+echo "🔍 Finding newly downloaded files..."
+after_files=()
+while IFS= read -r -d '' file; do
+    after_files+=("$file")
+done < <(find "$HOME/Music" -name "*.mp3" -print0 2>/dev/null || true)
+
+# Determine new files
+new_files=()
+for file in "${after_files[@]}"; do
+    found=false
+    for old_file in "${before_files[@]}"; do
+        if [[ "$file" == "$old_file" ]]; then
+            found=true
+            break
+        fi
+    done
+    if [[ "$found" == false ]]; then
+        new_files+=("$file")
+    fi
+done
+
+# Process album art for new files
+if [ ${#new_files[@]} -gt 0 ]; then
+    echo "🎨 Processing album art for ${#new_files[@]} new file(s)..."
+    
+    # Extract artist and track from search term for better album art matching
+    # Try to split on first space for single-word artist names
+    artist=""
+    track=""
+    if [[ "$search_term" =~ ^([^[:space:]]+)[[:space:]]+(.+)$ ]]; then
+        artist="${BASH_REMATCH[1]}"
+        track="${BASH_REMATCH[2]}"
+        echo "🎯 Parsed: Artist='$artist', Track='$track'"
+    fi
+    
+    for file in "${new_files[@]}"; do
+        echo "🖼️  Processing: $(basename "$file")"
+        
+        # Try with extracted artist/track first, then fallback to auto-detection
+        if [[ -n "$artist" && -n "$track" ]]; then
+            echo "🎯 Using search terms: $artist - $track"
+            if fixalbumart_improved "$file" "$artist" "$track"; then
+                echo "✅ Album art added successfully!"
+                continue
+            fi
+        fi
+        
+        # Fallback to auto-detection from filename
+        echo "🔄 Trying auto-detection from filename..."
+        if fixalbumart_improved "$file"; then
+            echo "✅ Album art added successfully!"
+        else
+            echo "⚠️  Album art processing failed, but file was downloaded"
+        fi
+    done
+else
+    echo "ℹ️  No new files detected - file may already exist"
+fi
+
+echo ""
+echo "✅ Download completed!"
+echo "📂 Check ~/Music for your organized music collection"
+
