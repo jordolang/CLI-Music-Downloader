@@ -1,18 +1,45 @@
 # CLI Music Downloader Dependencies
 # Install with: pip install -r requirements.txt
 
+# Testing framework
+pytest>=6.0.0
+pytest-asyncio>=0.21.0
+pytest-mock>=3.10.0
 # Core music downloading
 instantmusic>=2.3
 
 # ID3 tag manipulation and album art embedding
 eyed3>=0.9.6
+mutagen>=1.45.1
 
 # HTTP requests for album art fetching
 requests>=2.25.1
 
+# Lyrics fetching
+lyricsgenius>=3.0.1
+
+# Music metadata detection
+shazamio>=0.3.0
+
+# MusicBrainz metadata lookup
+musicbrainzngs>=0.7.1
+
+# Audio fingerprinting for better metadata matching
+acrcloud>=1.4.0
+
+# Last.fm integration for genre and artist information
+pylast>=5.2.0
+
+# Discogs integration for release information
+discogs-client>=2.3.0
+
+# Additional metadata processing
+aiohttp>=3.8.0
+aiofiles>=0.8.0
+
+# Image processing for album art
+Pillow>=8.0.0
+
 # YouTube audio extraction (automatically installed with instantmusic)
 # yt-dlp>=2023.1.6
-
-# Optional: Better audio quality processing
-# mutagen>=1.45.1
 

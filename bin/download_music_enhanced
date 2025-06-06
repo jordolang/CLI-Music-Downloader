@@ -1,0 +1,147 @@
+#!/bin/bash
+# Enhanced music downloader script with integrated Python metadata functionality
+# Downloads music with album art, lyrics, and comprehensive metadata from multiple sources
+
+set -euo pipefail
+
+# Script directory for finding Python scripts
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+PYTHON_SCRIPT="$SCRIPT_DIR/../scripts/download_music.py"
+
+# Function to display usage
+show_usage() {
+    echo "🎵 Enhanced Music Downloader with Integrated Metadata"
+    echo "Usage: download_music_enhanced [OPTIONS] <search_term>"
+    echo ""
+    echo "Options:"
+    echo "  --skip-metadata     Skip metadata enhancement phase"
+    echo "  --force-metadata    Force metadata refresh even if exists"
+    echo "  --metadata-source   Choose source: musicbrainz, shazam, all (default: all)"
+    echo "  --artist <name>     Specify artist name"
+    echo "  --title <name>      Specify song title"
+    echo "  --genius-key <key>  Genius API key for lyrics"
+    echo "  --python            Force use of Python implementation"
+    echo "  --bash              Force use of original bash implementation"
+    echo "  -v, --verbose       Enable verbose logging"
+    echo "  -q, --quiet         Quiet mode (errors only)"
+    echo "  -h, --help          Show this help"
+    echo ""
+    echo "Examples:"
+    echo "  download_music_enhanced 'The Beatles Hey Jude'"
+    echo "  download_music_enhanced 'Pink Floyd - Comfortably Numb' --metadata-source musicbrainz"
+    echo "  download_music_enhanced 'Queen Bohemian Rhapsody' --force-metadata"
+    echo "  download_music_enhanced 'Adele Hello' --skip-metadata"
+    echo "  download_music_enhanced 'Artist - Song' --artist 'Artist' --title 'Song'"
+    echo ""
+    echo "Files will be organized as: ~/Music/<Artist>/<Song>.mp3"
+}
+
+# Check if Python script is available
+check_python_availability() {
+    if [[ -f "$PYTHON_SCRIPT" ]] && command -v python3 >/dev/null 2>&1; then
+        # Check if required Python packages are available
+        if python3 -c "import musicbrainzngs, mutagen, eyed3" >/dev/null 2>&1; then
+            return 0
+        fi
+    fi
+    return 1
+}
+
+# Parse arguments
+USE_PYTHON="auto"
+PYTHON_ARGS=()
+SEARCH_TERM=""
+
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        --skip-metadata)
+            PYTHON_ARGS+=("$1")
+            shift
+            ;;
+        --force-metadata)
+            PYTHON_ARGS+=("$1")
+            shift
+            ;;
+        --metadata-source)
+            PYTHON_ARGS+=("$1" "$2")
+            shift 2
+            ;;
+        --artist)
+            PYTHON_ARGS+=("$1" "$2")
+            shift 2
+            ;;
+        --title)
+            PYTHON_ARGS+=("$1" "$2")
+            shift 2
+            ;;
+        --genius-key)
+            PYTHON_ARGS+=("$1" "$2")
+            shift 2
+            ;;
+        --python)
+            USE_PYTHON="force"
+            shift
+            ;;
+        --bash)
+            USE_PYTHON="never"
+            shift
+            ;;
+        -v|--verbose)
+            PYTHON_ARGS+=("$1")
+            shift
+            ;;
+        -q|--quiet)
+            PYTHON_ARGS+=("$1")
+            shift
+            ;;
+        -h|--help)
+            show_usage
+            exit 0
+            ;;
+        -*)
+            echo "❌ Unknown option: $1"
+            show_usage
+            exit 1
+            ;;
+        *)
+            if [[ -z "$SEARCH_TERM" ]]; then
+                SEARCH_TERM="$1"
+            else
+                SEARCH_TERM="$SEARCH_TERM $1"
+            fi
+            shift
+            ;;
+    esac
+done
+
+# Check if search term is provided
+if [[ -z "$SEARCH_TERM" ]]; then
+    echo "❌ Error: Search term is required"
+    show_usage
+    exit 1
+fi
+
+# Determine which implementation to use
+if [[ "$USE_PYTHON" == "force" ]]; then
+    if ! check_python_availability; then
+        echo "❌ Error: Python implementation not available"
+        echo "💡 Install dependencies with: pip install -r requirements.txt"
+        exit 1
+    fi
+    echo "🐍 Using Python implementation (forced)"
+    exec python3 "$PYTHON_SCRIPT" "${PYTHON_ARGS[@]}" "$SEARCH_TERM"
+elif [[ "$USE_PYTHON" == "never" ]]; then
+    echo "🔧 Using original bash implementation (forced)"
+    # Convert to old format and call original script
+    exec "$SCRIPT_DIR/download_music" "$SEARCH_TERM"
+elif [[ "$USE_PYTHON" == "auto" ]]; then
+    if check_python_availability; then
+        echo "🐍 Using enhanced Python implementation"
+        exec python3 "$PYTHON_SCRIPT" "${PYTHON_ARGS[@]}" "$SEARCH_TERM"
+    else
+        echo "🔧 Falling back to original bash implementation"
+        echo "💡 For enhanced metadata features, install: pip install -r requirements.txt"
+        exec "$SCRIPT_DIR/download_music" "$SEARCH_TERM"
+    fi
+fi
+

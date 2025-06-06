@@ -11,11 +11,16 @@
 - 🎵 **High-quality music downloads** from YouTube with optimal audio extraction
 - 🎨 **Automatic album artwork** fetching from iTunes API and Google Images
 - 📁 **Smart organization** by artist in `~/Music/<Artist>/<Song>.mp3`
-- 🏷️ **Proper ID3 tagging** with metadata and embedded album art
+- 🏷️ **Enhanced metadata system** with MusicBrainz, Last.fm, and Discogs integration
+- 🎼 **MusicBrainz integration** for comprehensive music metadata
+- 🎧 **Audio fingerprinting** with Shazam for accurate song identification
+- 📝 **Automatic lyrics** fetching and embedding from Genius API
 - 🔧 **Warp Terminal integration** with custom workflows
 - 🛠️ **Robust error handling** and fallback mechanisms
 - 📱 **Multiple image formats** support (JPEG, PNG, WebP)
 - 🔍 **Intelligent search** with artist/track parsing
+- 📊 **Batch processing** for existing music libraries
+- ⚙️ **Flexible metadata sources** with a priority system
 
 ## 🚀 Quick Start
 
@@ -23,7 +28,19 @@
 
 - macOS (tested on macOS Monterey+)
 - Python 3.8+ with pip
+- Homebrew (for system dependencies)
 - Warp Terminal (optional, for workflow integration)
+
+### System Dependencies
+
+The downloader uses several metadata management tools that need to be installed via Homebrew:
+
+```bash
+brew install exiftool id3v2
+```
+
+- **exiftool**: Advanced metadata extraction and manipulation
+- **id3v2**: Command-line ID3 tag editor for MP3 files
 
 ### Installation
 
@@ -41,14 +58,21 @@
 
 3. **Or install manually:**
    ```bash
-   # Install dependencies
+   # Install core dependencies
    pip install instantmusic eyed3 requests
+   
+   # Install enhanced metadata dependencies
+   pip install musicbrainzngs mutagen lyricsgenius shazamio pylast discogs-client
    
    # Copy scripts to local bin
    cp bin/download_music ~/.local/bin/
    cp bin/fixalbumart_improved ~/.local/bin/
+   cp scripts/download_music.py ~/.local/bin/
+   cp batch_metadata.py ~/.local/bin/
    chmod +x ~/.local/bin/download_music
    chmod +x ~/.local/bin/fixalbumart_improved
+   chmod +x ~/.local/bin/download_music.py
+   chmod +x ~/.local/bin/batch_metadata.py
    
    # Install Warp workflow (optional)
    mkdir -p ~/.config/warp/workflows
@@ -57,17 +81,48 @@
 
 ## 🎵 Usage
 
-### Command Line
+### Basic Downloads
 
 ```bash
-# Download a song
-download_music "Coldplay Yellow"
+# Download a song with enhanced metadata
 download_music "The Beatles Hey Jude"
+download_music "Pink Floyd - Comfortably Numb"
 download_music "Queen Bohemian Rhapsody"
+```
 
-# Multiple word artists work too
-download_music "Pink Floyd Comfortably Numb"
-download_music "Led Zeppelin Stairway to Heaven"
+### Enhanced Metadata Features
+
+```bash
+# Download with full metadata from MusicBrainz
+download_music "https://example.com/song" --metadata-source musicbrainz
+
+# Download with specific metadata source
+download_music "Adele Rolling in the Deep" --metadata-source all
+
+# Force metadata refresh for existing files
+download_music "Artist Song" --force-metadata
+
+# Skip metadata enhancement entirely
+download_music "Artist Song" --skip-metadata
+
+# Provide explicit artist and title hints
+download_music "search term" --artist "The Beatles" --title "Hey Jude"
+```
+
+### Batch Metadata Processing
+
+```bash
+# Fix metadata for existing files
+batch_metadata.py --fix "Adele - Rolling in the Deep.mp3"
+
+# Scan entire music library for metadata issues
+batch_metadata.py --scan ~/Music
+
+# View detailed metadata report
+batch_metadata.py --report --detailed
+
+# Dry run to see what would be fixed
+batch_metadata.py --fix ~/Music/Artist --dry-run
 ```
 
 ### Warp Terminal Workflow
@@ -98,8 +153,12 @@ CLI-Music-Downloader/
 ├── workflows/
 │   └── download_music.yaml     # Warp Terminal workflow
 ├── scripts/
-│   ├── install.sh             # Installation script
-│   └── uninstall.sh           # Uninstallation script
+│   ├── install.sh                # Installation script
+│   ├── uninstall.sh              # Uninstallation script
+│   ├── download_music.py          # Enhanced Python downloader
+│   ├── lyrics_metadata.py         # Lyrics and metadata handler
+│   └── metadata_manager.py        # Multi-source metadata manager
+├── batch_metadata.py              # Batch metadata processor
 ├── examples/
 │   └── sample_usage.md         # Usage examples
 ├── docs/
@@ -120,6 +179,122 @@ CLI-Music-Downloader/
 4. **Embed Metadata**: Uses `eyed3` to properly tag files and embed album artwork
 5. **Error Recovery**: Graceful handling of network issues and missing artwork
 
+## 📚 Metadata Sources and Priorities
+
+The CLI Music Downloader uses multiple metadata sources to ensure comprehensive and accurate music information:
+
+### 1. MusicBrainz (Primary Source)
+- **Data Retrieved:** Artist, album, year, track numbers, genre, MusicBrainz IDs
+- **Features:** Release group analysis, artist credit handling
+- **Confidence:** High (90%)
+- **Use Case:** Primary source for all metadata lookups
+
+### 2. Shazam (Audio Fingerprinting)
+- **Data Retrieved:** Artist, title, album (when available)
+- **Features:** Audio identification from downloaded file
+- **Confidence:** Medium-High (70%)
+- **Use Case:** When filename parsing fails or metadata is missing
+
+### 3. Genius (Lyrics)
+- **Data Retrieved:** Song lyrics
+- **Features:** Clean lyrics processing, embedded in ID3 tags
+- **Integration:** Uses existing LyricsMetadataHandler
+- **Use Case:** Lyrics enhancement for downloaded tracks
+
+### 4. Last.fm (Genre and Artist Info)
+- **Data Retrieved:** Genre tags, artist information, album details
+- **Features:** Community-driven tagging, extensive database
+- **Confidence:** Medium (60%)
+- **Use Case:** Fallback for genre and additional artist information
+
+### 5. Discogs (Release Information)
+- **Data Retrieved:** Detailed release info, catalog numbers, formats
+- **Features:** Comprehensive release database
+- **Confidence:** Medium (60%)
+- **Use Case:** Specialized release information and catalog data
+
+### Source Selection Strategy
+The system automatically selects the best source based on:
+- Data availability and completeness
+- Source reliability and confidence scores
+- User preferences (via `--metadata-source` flag)
+- Fallback hierarchy when primary sources fail
+
+## 📍 Troubleshooting Common Metadata Issues
+
+### Missing Metadata
+**Symptoms:** Downloaded files have empty or incomplete metadata fields
+
+**Solutions:**
+```bash
+# Force metadata refresh
+download_music "Artist Song" --force-metadata
+
+# Try different metadata source
+download_music "Artist Song" --metadata-source musicbrainz
+
+# Provide explicit artist/title hints
+download_music "search term" --artist "Artist" --title "Song"
+```
+
+### Incorrect Metadata
+**Symptoms:** Wrong artist, title, album, or other metadata fields
+
+**Solutions:**
+```bash
+# Force metadata refresh with specific source
+batch_metadata.py --fix "path/to/file.mp3" --dry-run
+
+# Use batch processor to fix multiple files
+batch_metadata.py --fix ~/Music/Artist --verbose
+```
+
+### API Rate Limiting
+**Symptoms:** "Rate limit exceeded" or slow metadata fetching
+
+**Solutions:**
+- Wait before retrying requests
+- Use batch processing with delays: `batch_metadata.py --fix ~/Music`
+- Check API key configurations for Last.fm and Discogs
+
+### Audio Fingerprinting Failures
+**Symptoms:** Shazam identification not working
+
+**Solutions:**
+- Ensure audio file is not corrupted
+- Try with different metadata source: `--metadata-source musicbrainz`
+- Check file format compatibility (MP3, FLAC, M4A supported)
+
+### Network Connectivity Issues
+**Symptoms:** Metadata lookup timeouts or connection errors
+
+**Solutions:**
+```bash
+# Skip metadata if network issues persist
+download_music "Artist Song" --skip-metadata
+
+# Run metadata enhancement later
+batch_metadata.py --fix ~/Music/newly_downloaded
+```
+
+### Configuration Issues
+**Symptoms:** Metadata sources not working despite correct setup
+
+**Solutions:**
+```bash
+# View current configuration
+batch_metadata.py --config
+
+# Set API keys via environment variables
+export GENIUS_API_KEY="your_key_here"
+export LASTFM_API_KEY="your_key_here"
+export DISCOGS_USER_TOKEN="your_token_here"
+```
+
+For extensive troubleshooting tips, visit the [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md).
+
+---
+
 ## 🎨 Album Art Sources
 
 ### iTunes API (Primary)
@@ -136,10 +311,19 @@ CLI-Music-Downloader/
 
 ## 🛠️ Dependencies
 
+### Core Dependencies
 - **[instantmusic](https://github.com/yask123/Instant-Music-Downloader)**: Core music downloading
 - **[eyed3](https://eyed3.readthedocs.io/)**: ID3 tag manipulation
 - **[requests](https://requests.readthedocs.io/)**: HTTP requests for album art
 - **[yt-dlp](https://github.com/yt-dlp/yt-dlp)**: YouTube audio extraction (dependency of instantmusic)
+
+### Enhanced Metadata Dependencies
+- **[musicbrainzngs](https://python-musicbrainzngs.readthedocs.io/)**: MusicBrainz API client
+- **[mutagen](https://mutagen.readthedocs.io/)**: Advanced audio metadata handling
+- **[lyricsgenius](https://lyricsgenius.readthedocs.io/)**: Genius API for lyrics
+- **[shazamio](https://github.com/dotX12/ShazamIO)**: Audio fingerprinting and identification
+- **[pylast](https://github.com/pylast/pylast)**: Last.fm API client
+- **[discogs-client](https://github.com/joalla/discogs_client)**: Discogs API client
 
 ## 📱 Output Structure
 
@@ -156,9 +340,12 @@ Downloaded music is organized as:
 ```
 
 Each file includes:
-- 🏷️ Proper ID3 tags (artist, title, album)
-- 🎨 High-quality embedded album artwork
-- 🎵 Optimal audio quality (typically 128-320 kbps)
+- 🏷️ **Comprehensive ID3 tags:** artist, title, album, year, track number, genre
+- 🎨 **High-quality embedded album artwork** (up to 600x600px)
+- 🎵 **Optimal audio quality** (typically 128-320 kbps)
+- 📝 **Embedded lyrics** (when available from Genius API)
+- 🆔 **MusicBrainz IDs** for precise music identification
+- 📊 **Validation metadata** ensuring data quality
 
 ## 🔍 Troubleshooting
 
@@ -211,4 +398,5 @@ If this project helped you, please consider giving it a star! ⭐
 ---
 
 **Made with ❤️ for music lovers who appreciate good tooling**
+
 

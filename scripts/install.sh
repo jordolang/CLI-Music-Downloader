@@ -30,6 +30,13 @@ fi
 
 info "Checking system requirements..."
 
+# Check for Homebrew
+if ! command -v brew &> /dev/null; then
+    error "Homebrew is required but not installed. Please install Homebrew first."
+    info "Visit https://brew.sh for installation instructions."
+    exit 1
+fi
+
 # Check for Python
 if ! command -v python3 &> /dev/null; then
     error "Python 3 is required but not installed. Please install Python 3.8+ first."
@@ -43,6 +50,14 @@ if ! command -v pip3 &> /dev/null && ! command -v pip &> /dev/null; then
 fi
 
 success "System requirements check passed"
+
+info "Installing system dependencies via Homebrew..."
+if brew list exiftool &> /dev/null && brew list id3v2 &> /dev/null; then
+    success "System dependencies already installed"
+else
+    brew install exiftool id3v2
+    success "System dependencies installed (exiftool, id3v2)"
+fi
 
 info "Installing Python dependencies..."
 if command -v pip3 &> /dev/null; then

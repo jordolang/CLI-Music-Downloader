@@ -77,12 +77,11 @@ for file in "${after_files[@]}"; do
     fi
 done
 
-# Process album art for new files
+# Process album art, lyrics, and metadata for new files
 if [ ${#new_files[@]} -gt 0 ]; then
-    echo "🎨 Processing album art for ${#new_files[@]} new file(s)..."
+    echo "🎨 Processing album art, lyrics, and metadata for ${#new_files[@]} new file(s)..."
     
-    # Extract artist and track from search term for better album art matching
-    # Try to split on first space for single-word artist names
+    # Extract artist and track from search term for better matching
     artist=""
     track=""
     if [[ "$search_term" =~ ^([^[:space:]]+)[[:space:]]+(.+)$ ]]; then
@@ -92,24 +91,53 @@ if [ ${#new_files[@]} -gt 0 ]; then
     fi
     
     for file in "${new_files[@]}"; do
-        echo "🖼️  Processing: $(basename "$file")"
+        echo "🎵 Processing: $(basename "$file")"
         
-        # Try with extracted artist/track first, then fallback to auto-detection
+        # Step 1: Add album art
+        echo "🖼️  Adding album art..."
         if [[ -n "$artist" && -n "$track" ]]; then
-            echo "🎯 Using search terms: $artist - $track"
             if fixalbumart_improved "$file" "$artist" "$track"; then
                 echo "✅ Album art added successfully!"
-                continue
+            else
+                echo "🔄 Trying auto-detection from filename..."
+                if fixalbumart_improved "$file"; then
+                    echo "✅ Album art added successfully!"
+                else
+                    echo "⚠️  Album art processing failed"
+                fi
+            fi
+        else
+            echo "🔄 Trying auto-detection from filename..."
+            if fixalbumart_improved "$file"; then
+                echo "✅ Album art added successfully!"
+            else
+                echo "⚠️  Album art processing failed"
             fi
         fi
         
-        # Fallback to auto-detection from filename
-        echo "🔄 Trying auto-detection from filename..."
-        if fixalbumart_improved "$file"; then
-            echo "✅ Album art added successfully!"
+        # Step 2: Add lyrics and comprehensive metadata
+        echo "📝 Adding lyrics and metadata..."
+        script_path="$original_dir/scripts/lyrics_metadata.py"
+        if [[ -f "$script_path" ]]; then
+            if [[ -n "$artist" && -n "$track" ]]; then
+                if python3 "$script_path" "$file" --artist "$artist" --title "$track"; then
+                    echo "✅ Lyrics and metadata added successfully!"
+                else
+                    echo "⚠️  Lyrics/metadata processing failed"
+                fi
+            else
+                if python3 "$script_path" "$file"; then
+                    echo "✅ Lyrics and metadata added successfully!"
+                else
+                    echo "⚠️  Lyrics/metadata processing failed"
+                fi
+            fi
         else
-            echo "⚠️  Album art processing failed, but file was downloaded"
+            echo "⚠️  Lyrics/metadata script not found at: $script_path"
+            echo "💡 Run: pip install -r requirements.txt to enable lyrics functionality"
         fi
+        
+        echo "" # Add spacing between files
     done
 else
     echo "ℹ️  No new files detected - file may already exist"
