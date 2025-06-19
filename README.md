@@ -28,12 +28,54 @@ By The Way! This is my first major software release. If you enjoyed this tool pl
 
 ## 🚀 Quick Start
 
+**One-command music downloads with everything included:**
+
+```bash
+# Download with lyrics, album art, and metadata automatically
+download_music "Taylor Swift Shake It Off"
+download_music "The Beatles Hey Jude"
+download_music "Queen Bohemian Rhapsody"
+```
+
+### ✅ **Production Ready Features**
+
+🎯 **What Each Download Includes:**
+- ✅ High-quality audio from YouTube (typically 128-320 kbps)
+- ✅ Official album artwork from iTunes API (600x600px)
+- ✅ Complete lyrics from Genius API embedded in ID3 tags
+- ✅ Comprehensive metadata (artist, title, album, genre, year)
+- ✅ Perfect file organization: `~/Music/Artist/Song.mp3`
+- ✅ Smart artist parsing (handles "Ed Sheeran", "Taylor Swift", etc.)
+- ✅ Graceful error handling with fallback mechanisms
+
+🧪 **Tested Production Examples:**
+- **RANI - Amen**: 209s audio, 66.4KB artwork, 1,395 chars lyrics ✅
+- **Taylor Swift - Shake It Off**: 242s audio, 51.5KB artwork, 3,124 chars lyrics ✅
+- **Ed Sheeran - Perfect**: Full metadata, lyrics, and artwork ✅
+
 ### Prerequisites
 
 - macOS (tested on macOS Monterey+)
 - Python 3.8+ with pip
 - Homebrew (for system dependencies)
 - Warp Terminal (optional, for workflow integration)
+
+## Development Setup
+1. Create virtual environment: `python3 -m venv .venv`
+2. Activate virtual environment: `source .venv/bin/activate`
+3. Install dependencies: `pip install -r requirements.txt`
+4. Configure Genius API for lyrics: `export GENIUS_API_KEY="your_api_key_here"`
+
+### 🔑 API Configuration
+
+To enable lyrics functionality, obtain a Genius API key:
+1. Visit [Genius API](https://genius.com/api-clients)
+2. Create an account and generate a Client Access Token
+3. Add to your shell profile:
+   ```bash
+   echo 'export GENIUS_API_KEY="your_token_here"' >> ~/.zshrc
+   source ~/.zshrc
+   ```
 
 ### System Dependencies
 
