@@ -133,6 +133,71 @@ Examples:
     else:
         return run_unittest()
 
+def get_tests_help() -> str:
+    """Get help text for the test runner tool"""
+    return """
+🧪 Test Runner Tool Help
+======================
+
+This tool runs the test suite for the CLI Music Downloader to ensure all 
+components are working correctly.
+
+Features:
+  • Runs comprehensive tests for metadata functionality
+  • Tests integration with MusicBrainz, Genius, and other services
+  • Validates metadata extraction, correction, and enhancement
+  • Tests batch processing functionality
+  • Includes edge case and error handling tests
+
+Test Categories:
+  • extraction: Metadata extraction from various sources
+  • musicbrainz: MusicBrainz API integration tests
+  • validation: Metadata validation rules and logic
+  • batch: Batch metadata processing tests
+  • edge_cases: Edge cases and error handling
+  • enhancement: Metadata enhancement functionality
+
+Usage:
+  The test runner will execute all available tests and display the results.
+  This helps ensure the music downloader is functioning properly after 
+  installation or updates.
+
+Note: Some tests may require internet connectivity to test API integrations.
+    """
+
+def run_tests_ui(progress_callback=None) -> tuple[bool, str]:
+    """UI-friendly wrapper for running tests
+    
+    Args:
+        progress_callback: Optional callback function for progress updates
+        
+    Returns:
+        tuple[bool, str]: (success, output_message)
+    """
+    try:
+        if progress_callback:
+            progress_callback("🧪 Starting test suite...")
+        
+        # Run unittest by default
+        return_code = run_unittest()
+        
+        if return_code == 0:
+            message = "✅ All tests passed successfully!"
+            if progress_callback:
+                progress_callback(message)
+            return True, message
+        else:
+            message = f"❌ Some tests failed (exit code: {return_code})"
+            if progress_callback:
+                progress_callback(message)
+            return False, message
+    
+    except Exception as e:
+        error_msg = f"💥 Error running tests: {e}"
+        if progress_callback:
+            progress_callback(error_msg)
+        return False, error_msg
+
 if __name__ == '__main__':
     sys.exit(main())
 

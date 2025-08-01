@@ -352,6 +352,83 @@ def parse_search_term(search_term: str) -> tuple[str, str]:
     
     return "", ""
 
+def download_music_ui(search_term: str, progress_callback=None) -> tuple[bool, str]:
+    """UI-friendly wrapper for music download functionality
+    
+    Args:
+        search_term: Search term for the music
+        progress_callback: Optional callback function for progress updates
+        
+    Returns:
+        tuple[bool, str]: (success, output_message)
+    """
+    try:
+        # Create a simple options object for the downloader
+        class SimpleOptions:
+            def __init__(self):
+                self.skip_metadata = False
+                self.force_metadata = False
+                self.metadata_source = 'all'
+                self.genius_key = os.getenv('GENIUS_API_KEY')
+        
+        options = SimpleOptions()
+        
+        # Parse search term for artist/title hints
+        artist_hint, title_hint = parse_search_term(search_term)
+        
+        if progress_callback:
+            progress_callback(f"🎯 Parsed: Artist='{artist_hint}', Title='{title_hint}'")
+        
+        # Create downloader and process
+        downloader = EnhancedMusicDownloader(options)
+        
+        if progress_callback:
+            progress_callback("🚀 Starting download and processing...")
+        
+        success = downloader.download_and_process(
+            search_term,
+            artist_hint or "",
+            title_hint or ""
+        )
+        
+        if success:
+            message = "🎉 Download and processing completed successfully!\n📂 Check ~/Music for your organized music collection"
+            return True, message
+        else:
+            return False, "❌ Download or processing failed"
+    
+    except Exception as e:
+        error_msg = f"💥 Unexpected error: {e}"
+        return False, error_msg
+
+def get_download_help() -> str:
+    """Get help text for the download music tool"""
+    return """
+🎵 Music Download Tool Help
+==========================
+
+This tool downloads music and applies comprehensive metadata using multiple sources.
+
+Usage:
+  Enter a search term like:
+  • "The Beatles Hey Jude"
+  • "Pink Floyd - Comfortably Numb"
+  • "Queen Bohemian Rhapsody"
+  • "Adele Hello"
+
+Features:
+  • Downloads audio using instantmusic
+  • Applies metadata from MusicBrainz, Shazam, and other sources
+  • Adds lyrics when available
+  • Adds album artwork
+  • Organizes files in ~/Music directory
+
+Environment Variables:
+  • GENIUS_API_KEY: For lyrics retrieval (optional)
+
+Note: Downloaded files will be saved to your ~/Music directory.
+    """
+
 def main():
     parser = argparse.ArgumentParser(
         description='Enhanced CLI Music Downloader with Integrated Metadata',

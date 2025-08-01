@@ -6,7 +6,7 @@ pytest>=6.0.0
 pytest-asyncio>=0.21.0
 pytest-mock>=3.10.0
 # Core music downloading
-instantmusic>=2.3
+instantmusic>=2.2
 
 # ID3 tag manipulation and album art embedding
 eyed3>=0.9.6

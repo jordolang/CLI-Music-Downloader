@@ -275,6 +275,67 @@ async def process_audio_file(file_path: str, genius_api_key: Optional[str] = Non
     
     return success
 
+def get_lyrics_ui(artist: str, title: str, progress_callback=None) -> tuple[bool, str]:
+    """UI-friendly wrapper for lyrics retrieval functionality
+    
+    Args:
+        artist: Artist name
+        title: Song title
+        progress_callback: Optional callback function for progress updates
+        
+    Returns:
+        tuple[bool, str]: (success, lyrics_text)
+    """
+    try:
+        genius_key = os.getenv('GENIUS_API_KEY')
+        handler = LyricsMetadataHandler(genius_key)
+        
+        if progress_callback:
+            progress_callback(f"📝 Searching for lyrics: {artist} - {title}")
+        
+        lyrics = handler.get_lyrics(artist, title)
+        
+        if lyrics:
+            if progress_callback:
+                progress_callback("✅ Lyrics found successfully")
+            return True, lyrics
+        else:
+            message = f"⚠️ No lyrics found for: {artist} - {title}"
+            if progress_callback:
+                progress_callback(message)
+            return False, message
+    
+    except Exception as e:
+        error_msg = f"💥 Error fetching lyrics: {e}"
+        if progress_callback:
+            progress_callback(error_msg)
+        return False, error_msg
+
+def get_lyrics_help() -> str:
+    """Get help text for the lyrics tool"""
+    return """
+📝 Lyrics Retrieval Tool Help
+============================
+
+This tool fetches lyrics for songs using the Genius API.
+
+Usage:
+  1. Enter the artist name
+  2. Enter the song title
+  3. The tool will search for and display lyrics
+
+Features:
+  • Searches Genius.com for accurate lyrics
+  • Cleans up lyrics formatting
+  • Can be used standalone or integrated with metadata management
+
+Environment Variables:
+  • GENIUS_API_KEY: Required for lyrics retrieval
+    Get your free API key at: https://genius.com/api-clients
+
+Note: Without a Genius API key, lyrics retrieval will not work.
+    """
+
 def main():
     import argparse
     

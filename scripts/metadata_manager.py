@@ -878,6 +878,33 @@ async def main():
     else:
         print("No metadata found")
 
+def get_metadata_help() -> str:
+    """Get help text for the metadata manager tool"""
+    return """
+📊 Metadata Manager Tool Help
+============================
+
+This tool validates, corrects, and integrates metadata from multiple online sources.
+
+Features:
+  • Fetches metadata from MusicBrainz, Last.fm, and Discogs
+  • Validates metadata against a comprehensive set of rules
+  • Automatically corrects common formatting issues (e.g., titles, artists, genres)
+  • Merges metadata from multiple sources to create the most complete record
+  • Provides a confidence score for the accuracy of the metadata
+
+Usage:
+  This tool is primarily used by other scripts (e.g., music download, batch processing) 
+  to ensure high-quality metadata. It can also be used programmatically for custom metadata tasks.
+
+Environment Variables:
+  • LASTFM_API_KEY: For Last.fm integration (optional)
+  • LASTFM_API_SECRET: For Last.fm integration (optional)
+  • DISCOGS_USER_TOKEN: For Discogs integration (optional)
+
+Note: MusicBrainz integration does not require an API key.
+    """
+
 if __name__ == '__main__':
     asyncio.run(main())
 
