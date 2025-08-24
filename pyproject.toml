@@ -1,0 +1,222 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "CLI-Music-Downloader"
+version = "1.0.0"
+description = "A powerful command-line music downloader with automatic album artwork and intelligent organization"
+readme = "README.md"
+license = {file = "LICENSE"}
+authors = [
+    {name = "Jordan Lang", email = "jordolang@example.com"}
+]
+maintainers = [
+    {name = "Jordan Lang", email = "jordolang@example.com"}
+]
+keywords = [
+    "music", 
+    "downloader", 
+    "youtube", 
+    "metadata", 
+    "album-art", 
+    "mp3", 
+    "lyrics", 
+    "cli", 
+    "musicbrainz",
+    "shazam"
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: End Users/Desktop",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: MacOS",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Multimedia :: Sound/Audio",
+    "Topic :: Multimedia :: Sound/Audio :: Conversion",
+    "Topic :: Internet :: WWW/HTTP",
+    "Topic :: System :: Archiving",
+    "Topic :: Utilities",
+    "Environment :: Console"
+]
+requires-python = ">=3.8"
+dependencies = [
+    # Core music downloading
+    "instantmusic>=2.0",
+    
+    # ID3 tag manipulation and album art embedding
+    "eyed3>=0.9.0",
+    "mutagen>=1.45.0",
+    
+    # HTTP requests for album art fetching
+    "requests>=2.25.0",
+    
+    # Lyrics fetching
+    "lyricsgenius>=3.0.0",
+    
+    # Music metadata detection
+    "shazamio>=0.3.0",
+    
+    # MusicBrainz metadata lookup
+    "musicbrainzngs>=0.7.0",
+    
+    # Last.fm integration for genre and artist information
+    "pylast>=5.0.0",
+    
+    # Discogs integration for release information
+    "discogs-client>=2.0.0",
+    
+    # Additional metadata processing
+    "aiohttp>=3.8.0",
+    "aiofiles>=0.8.0",
+    
+    # Image processing for album art
+    "Pillow>=8.0.0"
+]
+
+[project.optional-dependencies]
+dev = [
+    # Testing framework
+    "pytest>=6.0.0",
+    "pytest-asyncio>=0.21.0",
+    "pytest-mock>=3.10.0",
+    "pytest-cov>=4.0.0",
+    
+    # Development tools
+    "black>=22.0.0",
+    "isort>=5.10.0",
+    "flake8>=4.0.0",
+    "mypy>=0.991",
+    
+    # Build tools
+    "build>=0.8.0",
+    "twine>=4.0.0"
+]
+docs = [
+    # Documentation generation
+    "mkdocs>=1.4.0",
+    "mkdocs-material>=8.0.0",
+    "mkdocs-awesome-pages-plugin>=2.8.0"
+]
+audio-fingerprinting = [
+    # Advanced audio fingerprinting
+    "acrcloud>=1.4.0"
+]
+all = [
+    "CLI-Music-Downloader[dev,docs,audio-fingerprinting]"
+]
+
+[project.urls]
+Homepage = "https://github.com/jordolang/CLI-Music-Downloader"
+Repository = "https://github.com/jordolang/CLI-Music-Downloader.git"
+Documentation = "https://github.com/jordolang/CLI-Music-Downloader#readme"
+"Bug Tracker" = "https://github.com/jordolang/CLI-Music-Downloader/issues"
+Changelog = "https://github.com/jordolang/CLI-Music-Downloader/releases"
+
+[project.scripts]
+# Main entry points
+cli-music-downloader = "cli_music_downloader.cli:main"
+download-music = "cli_music_downloader.cli:download_music"
+batch-metadata = "cli_music_downloader.cli:batch_metadata"
+fixalbumart-improved = "cli_music_downloader.cli:fixalbumart_improved"
+
+# Legacy compatibility aliases
+download_music = "cli_music_downloader.cli:download_music"
+batch_metadata = "cli_music_downloader.cli:batch_metadata"
+
+[tool.setuptools]
+packages = ["cli_music_downloader"]
+
+[tool.setuptools.package-data]
+cli_music_downloader = ["*.py"]
+
+# Development and testing configuration
+[tool.pytest.ini_options]
+minversion = "6.0"
+addopts = "-ra -q --tb=short"
+testpaths = ["tests"]
+python_files = ["test_*.py", "*_test.py"]
+python_functions = ["test_*"]
+asyncio_mode = "auto"
+
+[tool.black]
+line-length = 100
+target-version = ['py38', 'py39', 'py310', 'py311']
+include = '\.pyi?$'
+extend-exclude = '''
+/(
+  # directories
+  \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | build
+  | dist
+)/
+'''
+
+[tool.isort]
+profile = "black"
+line_length = 100
+multi_line_output = 3
+include_trailing_comma = true
+force_grid_wrap = 0
+use_parentheses = true
+ensure_newline_before_comments = true
+
+[tool.mypy]
+python_version = "3.8"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = false
+disallow_incomplete_defs = false
+check_untyped_defs = true
+disallow_untyped_decorators = false
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_no_return = true
+warn_unreachable = true
+strict_equality = true
+
+[[tool.mypy.overrides]]
+module = [
+    "instantmusic.*",
+    "eyed3.*",
+    "mutagen.*",
+    "lyricsgenius.*",
+    "shazamio.*",
+    "musicbrainzngs.*",
+    "acrcloud.*",
+    "pylast.*",
+    "discogs_client.*"
+]
+ignore_missing_imports = true
+
+[tool.coverage.run]
+source = ["cli_music_downloader"]
+omit = [
+    "*/tests/*",
+    "*/test_*",
+    "setup.py"
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "if self.debug:",
+    "if settings.DEBUG",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if 0:",
+    "if __name__ == .__main__.:"
+]

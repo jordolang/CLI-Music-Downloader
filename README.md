@@ -2,9 +2,11 @@
 
 🎵 **A powerful command-line music downloader with automatic album artwork and intelligent organization**
 
-[![Platform](https://img.shields.io/badge/platform-macOS-blue.svg)](https://www.apple.com/macos/)
-[![Shell](https://img.shields.io/badge/shell-zsh%20%7C%20bash-green.svg)](https://www.zsh.org/)
+[![PyPI version](https://badge.fury.io/py/CLI-Music-Downloader.svg)](https://badge.fury.io/py/CLI-Music-Downloader)
+[![Python](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
+[![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Linux-blue.svg)](https://pypi.org/project/CLI-Music-Downloader/)
 [![License](https://img.shields.io/badge/license-MIT-orange.svg)](LICENSE)
+[![PyPI - Downloads](https://img.shields.io/pypi/dm/CLI-Music-Downloader)](https://pypi.org/project/CLI-Music-Downloader/)
 
 By The Way! This is my first major software release. If you enjoyed this tool please consider donating via the following link:
 
@@ -27,6 +29,55 @@ By The Way! This is my first major software release. If you enjoyed this tool pl
 - ⚙️ **Flexible metadata sources** with a priority system
 
 ## 🚀 Quick Start
+
+### 🎯 Simple Installation (Recommended)
+
+**Install with a single command using pip:**
+
+```bash
+# Install from PyPI (now live!)
+pip install CLI-Music-Downloader
+
+# Or install directly from GitHub
+pip install git+https://github.com/jordolang/CLI-Music-Downloader.git
+
+# Install with all optional features
+pip install CLI-Music-Downloader[all]
+```
+
+**Start downloading immediately:**
+
+```bash
+# Main CLI interface with subcommands
+cli-music-downloader download "The Beatles Hey Jude"
+cli-music-downloader batch --scan ~/Music
+cli-music-downloader fix-art "/path/to/song.mp3"
+
+# Direct command aliases for quick access
+download-music "Taylor Swift Shake It Off"
+batch-metadata --scan ~/Music
+fixalbumart-improved "/path/to/song.mp3"
+```
+
+### Docker Setup (Alternative)
+
+**Easy deployment with environment-specific configuration:**
+
+```bash
+# Clone and setup
+git clone https://github.com/yourusername/CLI-Music-Downloader.git
+cd CLI-Music-Downloader
+
+# Development setup
+cp .env.example .env
+# Edit .env with your configuration
+docker-compose up -d
+
+# Download music
+docker-compose exec cli-music-downloader download_music "The Beatles Hey Jude"
+```
+
+### Development Installation
 
 **One-command music downloads with everything included:**
 
@@ -189,6 +240,43 @@ fixalbumart_improved "/path/to/song.mp3" "Artist Name" "Track Name"
 fixalbumart_improved "/path/to/Artist - Track.mp3"
 ```
 
+## 🐳 Docker Environment Configuration
+
+### Environment Variables
+
+The Docker setup supports comprehensive environment configuration for different deployment scenarios:
+
+| Variable | Description | Default | Example |
+|----------|-------------|---------|----------|
+| `MUSIC_PATH` | Music directory path | `~/Music` | `/data/music` |
+| `CONFIG_PATH` | Configuration directory | `~/.config/cli-music-downloader` | `/data/config` |
+| `DOWNLOAD_QUALITY` | Audio quality | `best` | `320`, `256`, `128` |
+| `METADATA_SOURCE` | Metadata source | `all` | `musicbrainz`, `lastfm` |
+| `GENIUS_API_KEY` | Genius API for lyrics | - | `your-api-key` |
+
+### Deployment Examples
+
+```bash
+# Development with custom music directory
+MUSIC_PATH=~/MyMusic docker-compose up -d
+
+# Production with high-quality downloads
+DOWNLOAD_QUALITY=best MUSIC_PATH=/data/music docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+
+# Custom metadata source
+METADATA_SOURCE=musicbrainz docker-compose up -d
+```
+
+### Configuration Files
+
+- **`.env.example`**: Template for environment variables
+- **`.env.development`**: Development-specific settings
+- **`.env.production`**: Production-optimized settings
+- **`docker-compose.yml`**: Base Docker configuration
+- **`docker-compose.prod.yml`**: Production overrides
+
+For complete configuration details, see [docs/ENVIRONMENT_CONFIGURATION.md](docs/ENVIRONMENT_CONFIGURATION.md).
+
 ## 📁 Project Structure
 
 ```
@@ -209,10 +297,17 @@ CLI-Music-Downloader/
 │   └── sample_usage.md         # Usage examples
 ├── docs/
 │   ├── TROUBLESHOOTING.md      # Common issues and solutions
-│   └── API.md                  # Technical documentation
-├── README.md                   # This file
-├── LICENSE                     # MIT License
-└── requirements.txt            # Python dependencies
+│   ├── API.md                  # Technical documentation
+│   └── ENVIRONMENT_CONFIGURATION.md  # Environment config guide
+├── docker-compose.yml          # Docker configuration
+├── docker-compose.prod.yml     # Production overrides
+├── Dockerfile                  # Container definition
+├── .env.example               # Environment template
+├── .env.development           # Development settings
+├── .env.production            # Production settings
+├── README.md                  # This file
+├── LICENSE                    # MIT License
+└── requirements.txt           # Python dependencies
 ```
 
 ## 🔧 How It Works

@@ -1,0 +1,125 @@
+version: '3.8'
+
+services:
+  cli-music-downloader:
+    build: .
+    container_name: music-downloader
+    restart: unless-stopped
+    
+    # Environment variables for configuration
+    environment:
+      # Music directory path (customizable)
+      - MUSIC_PATH=${MUSIC_PATH:-/music}
+      
+      # API Configuration
+      - GENIUS_API_KEY=${GENIUS_API_KEY:-}
+      - LASTFM_API_KEY=${LASTFM_API_KEY:-}
+      - LASTFM_API_SECRET=${LASTFM_API_SECRET:-}
+      - DISCOGS_USER_TOKEN=${DISCOGS_USER_TOKEN:-}
+      
+      # Metadata Configuration
+      - METADATA_SOURCE=${METADATA_SOURCE:-all}
+      - SKIP_METADATA=${SKIP_METADATA:-false}
+      - FORCE_METADATA=${FORCE_METADATA:-false}
+      
+      # Download Configuration
+      - DOWNLOAD_QUALITY=${DOWNLOAD_QUALITY:-best}
+      - AUDIO_FORMAT=${AUDIO_FORMAT:-mp3}
+      - ORGANIZE_BY_ARTIST=${ORGANIZE_BY_ARTIST:-true}
+      
+      # System Configuration
+      - PYTHONUNBUFFERED=1
+      - PYTHONIOENCODING=utf-8
+      - TZ=${TZ:-UTC}
+    
+    # Volume mounts with environment variable support
+    volumes:
+      # Music directory - customizable via MUSIC_PATH env var
+      - ${MUSIC_PATH:-~/Music}:/music
+      
+      # Configuration directory for persistent settings
+      - ${CONFIG_PATH:-~/.config/cli-music-downloader}:/config
+      
+      # Cache directory for temporary files
+      - ${CACHE_PATH:-~/.cache/cli-music-downloader}:/cache
+      
+      # Logs directory
+      - ${LOGS_PATH:-~/.logs/cli-music-downloader}:/logs
+    
+    # Working directory
+    working_dir: /app
+    
+    # Keep container running for interactive use
+    stdin_open: true
+    tty: true
+    
+    # Health check
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import eyed3, requests; print('OK')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    
+    # Resource limits
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 256M
+    
+    # Networks
+    networks:
+      - music-network
+
+  # Optional: Web interface for remote music downloads
+  music-web-interface:
+    build:
+      context: .
+      dockerfile: Dockerfile.web
+    container_name: music-web-interface
+    restart: unless-stopped
+    depends_on:
+      - cli-music-downloader
+    
+    environment:
+      - MUSIC_SERVICE_URL=http://cli-music-downloader:8080
+      - WEB_PORT=${WEB_PORT:-3000}
+      - WEB_HOST=${WEB_HOST:-0.0.0.0}
+    
+    ports:
+      - "${WEB_PORT:-3000}:3000"
+    
+    volumes:
+      - ${MUSIC_PATH:-~/Music}:/music:ro
+    
+    networks:
+      - music-network
+    
+    # Only start if web interface is enabled
+    profiles:
+      - web
+
+networks:
+  music-network:
+    driver: bridge
+    name: music-network
+
+volumes:
+  # Named volumes for persistent data
+  music_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${MUSIC_PATH:-~/Music}
+  
+  config_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${CONFIG_PATH:-~/.config/cli-music-downloader}

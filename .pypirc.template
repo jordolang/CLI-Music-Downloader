@@ -1,0 +1,27 @@
+# PyPI Configuration Template
+# 
+# Copy this file to ~/.pypirc and fill in your credentials
+# DO NOT commit the actual .pypirc file to version control
+#
+
+[distutils]
+index-servers = 
+    pypi
+    testpypi
+
+[pypi]
+username = __token__
+password = <your-pypi-token-here>
+
+[testpypi]
+repository = https://test.pypi.org/legacy/
+username = __token__
+password = <your-test-pypi-token-here>
+
+# To get tokens:
+# 1. Create accounts on PyPI (https://pypi.org) and Test PyPI (https://test.pypi.org)
+# 2. Go to Account Settings > API tokens
+# 3. Create a new token with the appropriate scope
+# 4. Replace <your-pypi-token-here> and <your-test-pypi-token-here> with your actual tokens
+# 
+# The tokens should start with "pypi-" for PyPI and "pypi-" for Test PyPI

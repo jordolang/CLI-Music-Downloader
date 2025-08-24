@@ -1,0 +1,60 @@
+# Docker Compose Override for Development
+# This file is automatically loaded by docker-compose for development
+
+version: '3.8'
+
+services:
+  cli-music-downloader:
+    # Development-specific overrides
+    environment:
+      # Enable debug mode
+      - DEBUG=true
+      - VERBOSE=true
+      
+      # Development paths (use local directories)
+      - MUSIC_PATH=${MUSIC_PATH:-~/Music}
+      - CONFIG_PATH=${CONFIG_PATH:-~/.config/cli-music-downloader}
+      - CACHE_PATH=${CACHE_PATH:-~/.cache/cli-music-downloader}
+      - LOGS_PATH=${LOGS_PATH:-~/.logs/cli-music-downloader}
+    
+    # Development volume mounts
+    volumes:
+      # Mount source code for development
+      - .:/app:delegated
+      
+      # Development data directories
+      - ${MUSIC_PATH:-~/Music}:/music:delegated
+      - ${CONFIG_PATH:-~/.config/cli-music-downloader}:/config:delegated
+      - ${CACHE_PATH:-~/.cache/cli-music-downloader}:/cache:delegated
+      - ${LOGS_PATH:-~/.logs/cli-music-downloader}:/logs:delegated
+    
+    # Development networking
+    ports:
+      - "8080:8080"  # Expose internal port for debugging
+    
+    # Development command (keep container running)
+    command: ["/bin/bash", "-c", "tail -f /dev/null"]
+    
+    # Development resource limits (more generous)
+    deploy:
+      resources:
+        limits:
+          cpus: '4.0'
+          memory: 2G
+        reservations:
+          cpus: '1.0'
+          memory: 512M
+
+  # Enable web interface for development
+  music-web-interface:
+    profiles: []  # Remove profile restriction for development
+    
+    # Development-specific settings
+    environment:
+      - NODE_ENV=development
+      - DEBUG=true
+    
+    # Development volume mounts
+    volumes:
+      - ./web:/app/web:delegated  # Mount web source code
+      - ${MUSIC_PATH:-~/Music}:/music:ro

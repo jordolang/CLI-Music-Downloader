@@ -1,0 +1,154 @@
+# Docker Compose Production Configuration
+# Use with: docker-compose -f docker-compose.yml -f docker-compose.prod.yml up
+
+version: '3.8'
+
+services:
+  cli-music-downloader:
+    # Production-specific overrides
+    restart: always
+    
+    environment:
+      # Production settings
+      - DEBUG=false
+      - VERBOSE=false
+      
+      # Production paths (use persistent volumes)
+      - MUSIC_PATH=/data/music
+      - CONFIG_PATH=/data/config
+      - CACHE_PATH=/data/cache
+      - LOGS_PATH=/data/logs
+      
+      # Production quality settings
+      - DOWNLOAD_QUALITY=320
+      - METADATA_SOURCE=musicbrainz
+    
+    # Production volume mounts (named volumes for persistence)
+    volumes:
+      - music_data:/data/music
+      - config_data:/data/config
+      - cache_data:/data/cache
+      - logs_data:/data/logs
+    
+    # Production resource limits
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 256M
+      
+      # Production deployment settings
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+    
+    # Production logging
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    
+    # Production health checks
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import eyed3, requests; print('OK')"]
+      interval: 60s
+      timeout: 30s
+      retries: 3
+      start_period: 120s
+
+  # Web interface for production
+  music-web-interface:
+    restart: always
+    
+    environment:
+      - NODE_ENV=production
+      - DEBUG=false
+    
+    volumes:
+      - music_data:/music:ro
+    
+    # Production resource limits
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 128M
+    
+    # Production logging
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    
+    # Production health checks
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/health"]
+      interval: 60s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  # Production monitoring (optional)
+  music-monitoring:
+    image: prom/prometheus:latest
+    container_name: music-monitoring
+    restart: unless-stopped
+    profiles:
+      - monitoring
+    
+    ports:
+      - "9090:9090"
+    
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    
+    networks:
+      - music-network
+    
+    depends_on:
+      - cli-music-downloader
+
+# Production volumes
+volumes:
+  music_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /data/music
+  
+  config_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /data/config
+  
+  cache_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /data/cache
+  
+  logs_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /data/logs
+  
+  prometheus_data:
+    driver: local

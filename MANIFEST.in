@@ -1,0 +1,47 @@
+# Include documentation and license files
+include README.md
+include LICENSE
+include INSTALL.md
+include CHANGELOG.md
+
+# Include requirements and configuration files  
+include requirements.txt
+include pyproject.toml
+include setup.py
+
+# Include example files
+recursive-include examples *.md *.json *.yaml *.yml
+
+# Include documentation
+recursive-include docs *.md *.yaml *.yml
+
+# Include Warp Terminal workflows
+recursive-include workflows *.yaml *.yml
+
+# Include Docker files for reference
+include Dockerfile
+include docker-compose.yml
+include docker-compose.*.yml
+include docker-entrypoint.sh
+include .env.example
+include .env.development
+include .env.production
+
+# Include shell scripts for legacy support
+recursive-include bin *
+recursive-include scripts *.sh *.py
+
+# Include test configuration
+include pytest.ini
+recursive-include tests *.py *.md
+
+# Exclude development and build artifacts
+exclude .gitignore
+exclude .DS_Store
+exclude *.egg-info
+recursive-exclude * __pycache__
+recursive-exclude * *.py[co]
+recursive-exclude * *.orig
+recursive-exclude * *.rej
+exclude .coverage
+exclude .pytest_cache
