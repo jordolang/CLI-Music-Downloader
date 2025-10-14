@@ -11,6 +11,8 @@ import argparse
 import asyncio
 import subprocess
 import tempfile
+import shutil
+import platform
 from typing import Optional, Dict, Any, List
 from pathlib import Path
 
@@ -183,8 +185,40 @@ class EnhancedMusicDownloader:
                 before_files.add(file)
         
         try:
-            # Run instantmusic
-            cmd = ["instantmusic", "-q", "-s", search_term]
+            # Use yt-dlp directly for more reliable downloads
+            yt_dlp_exe = shutil.which("yt-dlp")
+            if not yt_dlp_exe and platform.system() == "Windows":
+                try:
+                    where_result = subprocess.run(["where", "yt-dlp"], 
+                                                capture_output=True, text=True, check=True)
+                    yt_dlp_exe = where_result.stdout.strip().split('\n')[0]
+                except subprocess.CalledProcessError:
+                    logger.error("yt-dlp not found in PATH")
+                    return []
+            
+            if not yt_dlp_exe:
+                logger.error("yt-dlp not found in PATH")
+                return []
+            
+            logger.debug(f"Using yt-dlp executable: {yt_dlp_exe}")
+            
+            # Download using yt-dlp with search
+            search_query = f"ytsearch:{search_term}"
+            output_template = str(self.music_dir / "%(uploader)s - %(title)s.%(ext)s")
+            
+            cmd = [
+                yt_dlp_exe,
+                "-x",  # Extract audio
+                "--audio-format", "mp3",  # Convert to MP3
+                "--audio-quality", "0",  # Best quality
+                "-o", output_template,  # Output template
+                search_query
+            ]
+            
+            # On Windows, handle Python scripts properly (but not .exe files)
+            if platform.system() == "Windows" and not yt_dlp_exe.lower().endswith('.exe'):
+                cmd = [sys.executable, yt_dlp_exe] + cmd[1:]
+            
             result = subprocess.run(cmd, capture_output=True, text=True, check=True)
             logger.info("Audio download completed")
         
@@ -307,13 +341,35 @@ class EnhancedMusicDownloader:
             # Add album art (using existing fixalbumart_improved)
             logger.info("🖼️ Adding album art...")
             try:
-                if artist_hint and title_hint:
-                    subprocess.run(["fixalbumart_improved", str(file_path), artist_hint, title_hint], 
-                                 check=False)  # Don't fail if album art fails
+                # Find fixalbumart_improved executable - Windows compatibility
+                fixalbumart_exe = shutil.which("fixalbumart_improved")
+                if not fixalbumart_exe and platform.system() == "Windows":
+                    try:
+                        # Try using Windows 'where' command
+                        where_result = subprocess.run(["where", "fixalbumart_improved"], 
+                                                    capture_output=True, text=True, check=True)
+                        fixalbumart_exe = where_result.stdout.strip().split('\n')[0]
+                    except subprocess.CalledProcessError:
+                        pass  # Will be handled below
+                
+                if fixalbumart_exe:
+                    logger.debug(f"Using fixalbumart_improved executable: {fixalbumart_exe}")
+                    
+                    # Prepare command with Windows Python script compatibility
+                    if platform.system() == "Windows" and not fixalbumart_exe.endswith('.exe'):
+                        base_cmd = [sys.executable, fixalbumart_exe, str(file_path)]
+                    else:
+                        base_cmd = [fixalbumart_exe, str(file_path)]
+                    
+                    if artist_hint and title_hint:
+                        cmd = base_cmd + [artist_hint, title_hint]
+                    else:
+                        cmd = base_cmd
+                    
+                    subprocess.run(cmd, check=False)  # Don't fail if album art fails
+                    logger.info("✅ Album art processing completed")
                 else:
-                    subprocess.run(["fixalbumart_improved", str(file_path)], 
-                                 check=False)  # Don't fail if album art fails
-                logger.info("✅ Album art processing completed")
+                    logger.warning("fixalbumart_improved not found, skipping album art")
             except Exception as e:
                 logger.warning(f"Album art processing failed: {e}")
             
