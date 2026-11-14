@@ -1,0 +1,14 @@
+#!/bin/bash
+#
+# Spotify Library Exporter Wrapper
+# Exports Spotify saved tracks to a formatted text file for batch downloading
+#
+# Usage: spotify_export [output_file]
+#
+
+# Get the directory where this script is located
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+
+# Run the Python script
+python3 "$PROJECT_ROOT/scripts/spotify_library_export.py" "$@"

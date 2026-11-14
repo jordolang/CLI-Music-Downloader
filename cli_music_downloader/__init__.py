@@ -1,29 +1,34 @@
 """
-CLI Music Downloader - A powerful command-line music downloader with automatic metadata and album artwork.
+CLI Music Downloader - download songs (or a whole Apple Music song list) as
+<Artist>/<Title>.mp3 with full metadata, album artwork and lyrics.
 
-This package provides high-quality music downloads from YouTube with intelligent organization,
-automatic album artwork, lyrics, and comprehensive metadata enhancement from multiple sources.
+Audio comes from YouTube Music, YouTube, SoundCloud or Audius; metadata from the
+iTunes Search API and Deezer; lyrics from LRCLIB.
 """
 
-__version__ = "1.0.0"
+__version__ = "2.0.0"
 __author__ = "Jordan Lang"
-__email__ = "jordolang@example.com"
 __license__ = "MIT"
-__description__ = "A powerful command-line music downloader with automatic album artwork and intelligent organization"
-
-# Core functionality imports
-from .download_music import EnhancedMusicDownloader, MusicBrainzMetadata
-from .batch_metadata import BatchMetadataProcessor
-from .lyrics_metadata import LyricsMetadataHandler
+__description__ = "Download music with metadata and album artwork, from a single song or an Apple Music song list"
 
 __all__ = [
-    "EnhancedMusicDownloader",
-    "MusicBrainzMetadata", 
-    "BatchMetadataProcessor",
-    "LyricsMetadataHandler",
+    "Track",
+    "load_song_list",
+    "LibraryDownloader",
+    "SourceFinder",
     "__version__",
-    "__author__",
-    "__email__",
-    "__license__",
-    "__description__"
 ]
+
+
+def __getattr__(name):
+    # Lazy imports keep `import cli_music_downloader` light and free of optional dependencies.
+    if name in ("Track", "load_song_list"):
+        from . import songlist
+        return getattr(songlist, name)
+    if name == "LibraryDownloader":
+        from .library import LibraryDownloader
+        return LibraryDownloader
+    if name == "SourceFinder":
+        from .sources import SourceFinder
+        return SourceFinder
+    raise AttributeError(name)

@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "CLI-Music-Downloader"
-version = "1.0.0"
-description = "A powerful command-line music downloader with automatic album artwork and intelligent organization"
+version = "2.0.0"
+description = "Download music (or a whole Apple Music song list PDF) as Artist/Title.mp3 with metadata, artwork and lyrics"
 readme = "README.md"
 license = {file = "LICENSE"}
 authors = [
@@ -45,42 +45,36 @@ classifiers = [
     "Topic :: Utilities",
     "Environment :: Console"
 ]
-requires-python = ">=3.8"
+requires-python = ">=3.9"
 dependencies = [
-    # Core music downloading
-    "instantmusic>=2.0",
-    
-    # ID3 tag manipulation and album art embedding
-    "eyed3>=0.9.0",
+    # Audio search + download (YouTube Music, YouTube, SoundCloud) — needs ffmpeg on PATH
+    "yt-dlp>=2025.1.1",
+    # ID3 tags, album artwork and lyrics embedding
     "mutagen>=1.45.0",
-    
-    # HTTP requests for album art fetching
+    # Catalog (iTunes / Deezer), lyrics (LRCLIB) and Audius requests
     "requests>=2.25.0",
-    
-    # Lyrics fetching
-    "lyricsgenius>=3.0.0",
-    
-    # Music metadata detection
-    "shazamio>=0.3.0",
-    
-    # MusicBrainz metadata lookup
-    "musicbrainzngs>=0.7.0",
-    
-    # Last.fm integration for genre and artist information
-    "pylast>=5.0.0",
-    
-    # Discogs integration for release information
-    "discogs-client>=2.0.0",
-    
-    # Additional metadata processing
-    "aiohttp>=3.8.0",
-    "aiofiles>=0.8.0",
-    
-    # Image processing for album art
-    "Pillow>=8.0.0"
+    # Song list PDF parsing
+    "pymupdf>=1.24.0",
+    # Artwork cropping/resizing
+    "Pillow>=8.0.0",
+    # Terminal UI for the music suggester
+    "textual>=0.80.0",
+    # Native desktop window for the music app (WKWebView on macOS)
+    "pywebview>=5.0",
 ]
 
 [project.optional-dependencies]
+# Dependencies of the older metadata tools (batch / fix-art commands)
+legacy = [
+    "eyed3>=0.9.0",
+    "lyricsgenius>=3.0.0",
+    "shazamio>=0.3.0",
+    "musicbrainzngs>=0.7.0",
+    "pylast>=5.0.0",
+    "discogs-client>=2.0.0",
+    "aiohttp>=3.8.0",
+    "aiofiles>=0.8.0",
+]
 dev = [
     # Testing framework
     "pytest>=6.0.0",
@@ -109,7 +103,7 @@ audio-fingerprinting = [
     "acrcloud>=1.4.0"
 ]
 all = [
-    "CLI-Music-Downloader[dev,docs,audio-fingerprinting]"
+    "CLI-Music-Downloader[legacy,dev,docs,audio-fingerprinting]"
 ]
 
 [project.urls]
@@ -120,21 +114,19 @@ Documentation = "https://github.com/jordolang/CLI-Music-Downloader#readme"
 Changelog = "https://github.com/jordolang/CLI-Music-Downloader/releases"
 
 [project.scripts]
-# Main entry points
-cli-music-downloader = "cli_music_downloader.cli:main"
+cli-music-downloader = "cli_music_downloader.cli:cli_main"
+download-songlist = "cli_music_downloader.cli:download_songlist"
 download-music = "cli_music_downloader.cli:download_music"
+music-suggester = "cli_music_downloader.cli:music_suggester"
+music-player = "cli_music_downloader.cli:music_player"
 batch-metadata = "cli_music_downloader.cli:batch_metadata"
 fixalbumart-improved = "cli_music_downloader.cli:fixalbumart_improved"
 
-# Legacy compatibility aliases
-download_music = "cli_music_downloader.cli:download_music"
-batch_metadata = "cli_music_downloader.cli:batch_metadata"
-
 [tool.setuptools]
-packages = ["cli_music_downloader"]
+packages = ["cli_music_downloader", "cli_music_downloader.gui"]
 
 [tool.setuptools.package-data]
-cli_music_downloader = ["*.py"]
+cli_music_downloader = ["*.py", "gui/static/*"]
 
 # Development and testing configuration
 [tool.pytest.ini_options]
@@ -189,7 +181,8 @@ strict_equality = true
 
 [[tool.mypy.overrides]]
 module = [
-    "instantmusic.*",
+    "yt_dlp.*",
+    "pymupdf.*",
     "eyed3.*",
     "mutagen.*",
     "lyricsgenius.*",

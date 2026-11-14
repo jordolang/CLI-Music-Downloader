@@ -1,0 +1,10 @@
+#!/bin/bash
+# Suggest songs for your music library, preview them and download them (terminal UI).
+#   music_suggester            # reads and downloads into ~/Music
+#   music_suggester -o DIR -n 50
+set -euo pipefail
+PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+PYTHON="$PROJECT_DIR/.venv/bin/python"
+[[ -x "$PYTHON" ]] || PYTHON="python3"
+export PYTHONPATH="$PROJECT_DIR${PYTHONPATH:+:$PYTHONPATH}"
+exec "$PYTHON" -m cli_music_downloader suggest "$@"

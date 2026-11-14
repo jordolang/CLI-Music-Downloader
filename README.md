@@ -17,9 +17,10 @@ By The Way! This is my first major software release. If you enjoyed this tool pl
 - 🎵 **High-quality music downloads** from YouTube with optimal audio extraction
 - 🎨 **Automatic album artwork** fetching from iTunes API and Google Images
 - 📁 **Smart organization** by artist in `~/Music/<Artist>/<Song>.mp3`
+- 🎧 **Spotify library export** - Export your entire Spotify library for batch downloading
 - 🏷️ **Enhanced metadata system** with MusicBrainz, Last.fm, and Discogs integration
 - 🎼 **MusicBrainz integration** for comprehensive music metadata
-- 🎧 **Audio fingerprinting** with Shazam for accurate song identification
+- 🎯 **Audio fingerprinting** with Shazam for accurate song identification
 - 📝 **Automatic lyrics** fetching and embedding from Genius API
 - 🔧 **Warp Terminal integration** with custom workflows
 - 🛠️ **Robust error handling** and fallback mechanisms
@@ -178,6 +179,135 @@ brew install exiftool id3v2
 
 ## 🎵 Usage
 
+### Desktop Music App (library, player and store in one window)
+
+```bash
+bin/music_player                    # or: cli-music-downloader gui  /  music-player
+bin/music_player --library ~/Music  # pick the library folder (remembered)
+bin/music_player --browser          # open in your web browser instead of a native window
+```
+
+An iTunes-style app for your library that downloads music for you:
+
+- **Library**: Recently Added, Songs, Albums, Artists, Genres, Loved and Most Played views, with sortable columns, filtering, multi-select and right-click menus
+- **Player**: queue (Up Next), shuffle, repeat, seek, volume, a lyrics panel, media keys, and resume where you left off
+- **Playlists**: create, rename and reorder playlists; drag songs onto a playlist in the sidebar
+- **Get Info**: edit title, artist, album, genre, year, track numbers and lyrics, and the file is renamed to `Artist/Title.mp3`
+- **Search**: one search covers your library, catalog songs (30-second previews) and YouTube videos. Watch a video in the app, or listen to only its audio
+- **Downloads**: one click downloads a song or a specific video's audio, with artwork, lyrics and tags. Import a song list (Apple Music PDF, CSV or text) by dropping it on the window
+- **For You**: suggestions from the artists in your library, each with a preview and a download button
+- **Organizer**: find songs missing artwork, lyrics or details and fill them in from the catalog; spot duplicates and low-quality files; move every file into `Artist/Title.mp3`
+
+The app runs a small server on `127.0.0.1` and shows it in a native WebKit window (via `pywebview`). Each launch makes a new access token, so other web pages cannot use the server. Deleted songs go to the Trash. Settings, playlists and play counts are saved in `~/.cache/cli-music-downloader/gui_state.json`.
+
+### Download a Whole Song List (Apple Music PDF, CSV or text)
+
+Print a playlist from Apple Music (**File → Print… → Save as PDF**) and download every song in it:
+
+```bash
+# One-time setup
+brew install ffmpeg
+python3 -m venv .venv && .venv/bin/pip install -e .
+
+# See what was parsed from the PDF (* = name cut off in the printout)
+.venv/bin/cli-music-downloader list Music.pdf
+
+# Download everything into ~/Music/<Artist>/<Title>.mp3
+.venv/bin/cli-music-downloader songlist Music.pdf
+
+# Options
+.venv/bin/cli-music-downloader songlist Music.pdf -o ~/Music/Library   # another folder
+.venv/bin/cli-music-downloader songlist Music.pdf --only 1-25,40        # some rows only
+.venv/bin/cli-music-downloader songlist Music.pdf --dry-run             # plan only
+.venv/bin/cli-music-downloader songlist Music.pdf --cookies-from-browser chrome  # age-restricted songs
+.venv/bin/cli-music-downloader verify ~/Music                           # check tags + artwork
+```
+
+How it works:
+
+- **Names exactly as listed.** The artist folder, file name, title tag and artist tag use the song list's text.
+  Only names the printout cut off (e.g. `Juice WRLD & YoungBoy Never…`) are completed from the Apple catalog,
+  and `/` or `:` become `-` in file names (tags keep the original).
+- **Right recording.** Each search result is scored against the listed title, artist and *duration*.
+  Live, acoustic, cover, remix, sped-up and clean edits are rejected unless the listed title asks for them,
+  and the downloaded audio's real length is checked.
+- **Sources, in order:** YouTube Music → YouTube → SoundCloud → Audius (`--sources` changes the order).
+- **Metadata:** title, artist, album, album artist, genre, release date, track/disc numbers, explicit flag,
+  1400×1400 album artwork (iTunes, then Deezer), and lyrics (LRCLIB). All sources are free and need no API key.
+- **Resumable:** files that already exist are skipped. Duplicate rows (same artist and title) are downloaded once.
+  A report is written to `download_report.csv` / `.json` in the output folder.
+
+### Music Suggester (TUI)
+
+Suggests songs for your library, lets you hear them first, and downloads the ones you pick:
+
+```bash
+.venv/bin/music-suggester                 # or: bin/music_suggester, cli-music-downloader suggest
+.venv/bin/music-suggester -o ~/Music/Library -n 50   # another library, 50 suggestions
+.venv/bin/music-suggester --print         # just list the suggestions
+.venv/bin/music-suggester --download-all  # download every suggestion without the TUI
+```
+
+On start it reads every `.mp3` under `~/Music` (and its subfolders), works out which artists you play most,
+and shows 25–50 songs you don't have yet (40 by default):
+
+- **Similar artists** to your favourites ("Similar to Shinedown & Breaking Benjamin"), and
+- **Hits you're missing** from artists already in your library ("You have 12 songs by Creed").
+
+Songs you own, songs on a song list you downloaded, and songs you dismissed are never suggested, and the list
+is spread across the different styles in your library. Suggestions come from Deezer's free API (no key needed).
+
+| Key | Action |
+|-----|--------|
+| `p` / `Enter` | Play the first 30 seconds (from YouTube; Deezer's 30-second preview if YouTube is slow or blocked) |
+| `s` | Stop the preview |
+| `d` | Download the highlighted song |
+| `Space`, then `D` | Mark songs, then download the marked ones |
+| `a` | Download every suggestion |
+| `x` | Not for me: remove it and never suggest it again |
+| `r` | New suggestions |
+| `q` | Quit |
+
+Downloads go through the same pipeline as the song-list downloader: they're saved as
+`~/Music/<Artist>/<Title>.mp3` with metadata, album artwork and lyrics, one at a time so YouTube doesn't
+rate-limit. Previews need `ffplay` (part of `brew install ffmpeg`).
+
+### Spotify Library Export (NEW!)
+
+Export your entire Spotify library to a text file for batch downloading:
+
+```bash
+# Export your Spotify library
+python3 scripts/spotify_library_export.py
+
+# The script will:
+# 1. Open your browser for Spotify login
+# 2. Request permission to read your library
+# 3. Fetch all your saved tracks
+# 4. Export to spotify_library.txt (Artist - Song format)
+
+# Then batch download everything:
+bin/download_songlist spotify_library.txt
+```
+
+**Features:**
+- Secure OAuth authentication (web login)
+- Fetches entire library (supports 1000+ songs)
+- Automatic duplicate removal
+- UTF-8 support for international characters
+- Ready-to-use format for batch downloading
+
+**Setup (First Time):**
+1. Create a Spotify app at https://developer.spotify.com/dashboard
+2. Add redirect URI: `http://localhost:8888/callback`
+3. Set environment variables:
+   ```bash
+   export SPOTIFY_CLIENT_ID="your_client_id"
+   export SPOTIFY_CLIENT_SECRET="your_client_secret"
+   ```
+
+See [docs/SPOTIFY_EXPORT.md](docs/SPOTIFY_EXPORT.md) for detailed setup instructions and [examples/spotify_export_example.md](examples/spotify_export_example.md) for usage examples.
+
 ### Basic Downloads
 
 ```bash
@@ -283,7 +413,8 @@ For complete configuration details, see [docs/ENVIRONMENT_CONFIGURATION.md](docs
 CLI-Music-Downloader/
 ├── bin/
 │   ├── download_music          # Main download script
-│   └── fixalbumart_improved    # Album art processor
+│   ├── fixalbumart_improved    # Album art processor
+│   └── spotify_export          # Spotify library export wrapper
 ├── workflows/
 │   └── download_music.yaml     # Warp Terminal workflow
 ├── scripts/
@@ -291,14 +422,17 @@ CLI-Music-Downloader/
 │   ├── uninstall.sh              # Uninstallation script
 │   ├── download_music.py          # Enhanced Python downloader
 │   ├── lyrics_metadata.py         # Lyrics and metadata handler
-│   └── metadata_manager.py        # Multi-source metadata manager
+│   ├── metadata_manager.py        # Multi-source metadata manager
+│   └── spotify_library_export.py  # Spotify OAuth & library export
 ├── batch_metadata.py              # Batch metadata processor
 ├── examples/
-│   └── sample_usage.md         # Usage examples
+│   ├── sample_usage.md         # Usage examples
+│   └── spotify_export_example.md  # Spotify export examples
 ├── docs/
 │   ├── TROUBLESHOOTING.md      # Common issues and solutions
 │   ├── API.md                  # Technical documentation
-│   └── ENVIRONMENT_CONFIGURATION.md  # Environment config guide
+│   ├── ENVIRONMENT_CONFIGURATION.md  # Environment config guide
+│   └── SPOTIFY_EXPORT.md       # Spotify export documentation
 ├── docker-compose.yml          # Docker configuration
 ├── docker-compose.prod.yml     # Production overrides
 ├── Dockerfile                  # Container definition

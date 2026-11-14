@@ -104,3 +104,7 @@ config.local
 *.wav
 *.m4a
 
+
+# macOS Finder custom-icon files and personal song lists
+Icon?
+Music.pdf

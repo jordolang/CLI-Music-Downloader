@@ -1,0 +1,12 @@
+#!/bin/bash
+# Desktop music app: library + player, playlists, tag editing, search with
+# song/video previews, and one-click downloads into your library.
+#   music_player                 # native window, library at ~/Music (or the saved setting)
+#   music_player --library DIR   # use another library folder
+#   music_player --browser       # open in your web browser instead
+set -euo pipefail
+PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+PYTHON="$PROJECT_DIR/.venv/bin/python"
+[[ -x "$PYTHON" ]] || PYTHON="python3"
+export PYTHONPATH="$PROJECT_DIR${PYTHONPATH:+:$PYTHONPATH}"
+exec "$PYTHON" -m cli_music_downloader gui "$@"
