@@ -108,3 +108,6 @@ config.local
 # macOS Finder custom-icon files and personal song lists
 Icon?
 Music.pdf
+
+# Desktop build helpers (packaging/fetch_tools.py)
+packaging/tools/

@@ -31,6 +31,17 @@ By The Way! This is my first major software release. If you enjoyed this tool pl
 
 ## 🚀 Quick Start
 
+### 💻 Desktop app for Windows and macOS (no install needed)
+
+Download the latest build from **[Releases](https://github.com/jordolang/CLI-Music-Downloader/releases/latest)**:
+
+- **Windows 10/11:** `CLI-Music-<version>-windows-x64.zip`. Unzip it and run `CLI Music.exe`.
+- **macOS (Apple silicon / Intel):** `CLI-Music-<version>-macos-arm64.dmg` / `-macos-intel.dmg`. Drag the app to Applications. The app is not notarized, so on first launch go to System Settings → Privacy & Security and click **Open Anyway**.
+
+Python, ffmpeg and deno are bundled. The command-line tool is included too: run `cli-music-downloader.exe --help` on Windows, or `"/Applications/CLI Music.app/Contents/MacOS/CLI Music" --help` on macOS.
+
+The builds come from `.github/workflows/release.yml` whenever a `v*` tag is pushed. To build locally: `pip install . "yt-dlp[default]" pyinstaller && python packaging/fetch_tools.py && pyinstaller packaging/cli_music.spec`.
+
 ### 🎯 Simple Installation (Recommended)
 
 **Install with a single command using pip:**

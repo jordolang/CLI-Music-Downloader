@@ -21,7 +21,9 @@ def run_gui(library: Optional[str] = None, port: int = 0, browser: bool = False,
                         format="%(asctime)s %(levelname)s %(name)s: %(message)s")
     app = App(library)
     server = make_server(app, port)
-    url = f"http://127.0.0.1:{server.server_address[1]}/"
+    # The token rides in the URL fragment: browsers never send it to the server, and the
+    # served page contains no secret for other programs on this Mac to read.
+    url = f"http://127.0.0.1:{server.server_address[1]}/#t={app.token}"
     app.start_background()
     threading.Thread(target=server.serve_forever, daemon=True, name="http").start()
 

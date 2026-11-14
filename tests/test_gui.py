@@ -157,10 +157,11 @@ def test_server_requires_token(server):
     assert exc.value.code == 403
 
 
-def test_server_index_page_has_token(server):
+def test_server_index_page_holds_no_token(server):
+    """The token reaches the page only via the URL fragment, never in the served HTML."""
     app, base = server
     status, _, raw = call(base, app, "/", token=False)
-    assert status == 200 and app.token.encode() in raw
+    assert status == 200 and app.token.encode() not in raw and b"__TOKEN__" not in raw
     for asset in ("/app.js", "/app.css"):
         assert call(base, app, asset, token=False)[0] == 200
 
