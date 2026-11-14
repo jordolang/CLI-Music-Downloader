@@ -1,4 +1,4 @@
-#!/Users/jordanlang/.local/pipx/venvs/instantmusic/bin/python
+#!/usr/bin/env python3
 
 import sys
 import os

@@ -27,7 +27,7 @@ try:
     )
     from lyrics_metadata import LyricsMetadataHandler
     from download_music import MusicBrainzMetadata, EnhancedMusicDownloader
-except ImportError as e:
+except (ImportError, SystemExit) as e:
     pytest.skip(f"Error importing modules: {e}", allow_module_level=True)
 
 

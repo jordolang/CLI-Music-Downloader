@@ -18,8 +18,9 @@ except ImportError:
     sys.exit(1)
 
 # Import UI functions from CLI tools
+from cli_music_downloader.download_music import download_music_ui, get_download_help
+
 try:
-    from scripts.download_music import download_music_ui, get_download_help
     from scripts.lyrics_metadata import get_lyrics_ui, get_lyrics_help
     from scripts.metadata_manager import get_metadata_help
     from scripts.run_tests import run_tests_ui, get_tests_help

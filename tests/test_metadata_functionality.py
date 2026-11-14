@@ -31,9 +31,10 @@ try:
     )
     from lyrics_metadata import LyricsMetadataHandler
     from download_music import MusicBrainzMetadata, EnhancedMusicDownloader
-except ImportError as e:
-    print(f"Error importing modules: {e}")
-    sys.exit(1)
+except (ImportError, SystemExit) as e:
+    import pytest
+    pytest.skip(f"Legacy metadata dependencies not installed (pip install -e '.[legacy]'): {e}",
+                allow_module_level=True)
 
 
 class TestMetadataExtraction(unittest.TestCase):

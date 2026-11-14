@@ -1,0 +1,9 @@
+#!/bin/bash
+# Download every song in a song list (Apple Music PDF, CSV or text) as <Artist>/<Title>.mp3.
+#   download_songlist Music.pdf -o ~/Music
+set -euo pipefail
+PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+PYTHON="$PROJECT_DIR/.venv/bin/python"
+[[ -x "$PYTHON" ]] || PYTHON="python3"
+export PYTHONPATH="$PROJECT_DIR${PYTHONPATH:+:$PYTHONPATH}"
+exec "$PYTHON" -m cli_music_downloader songlist "$@"
