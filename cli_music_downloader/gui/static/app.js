@@ -6,7 +6,17 @@
    previews, and one-click downloads into the library.
    ===================================================================== */
 
-const TOKEN = document.querySelector('meta[name=token]').content;
+// The access token arrives in the URL fragment (#t=...), which browsers never send to the
+// server, so the served page holds no secret. sessionStorage keeps it across reloads.
+const TOKEN = (() => {
+  const fromHash = new URLSearchParams(location.hash.slice(1)).get('t');
+  if (fromHash) {
+    try { sessionStorage.setItem('cm.token', fromHash); } catch { /* storage blocked */ }
+    history.replaceState(null, '', location.pathname);
+    return fromHash;
+  }
+  try { return sessionStorage.getItem('cm.token') || ''; } catch { return ''; }
+})();
 const $ = (sel, el = document) => el.querySelector(sel);
 const $$ = (sel, el = document) => [...el.querySelectorAll(sel)];
 const ESC = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };

@@ -246,7 +246,7 @@ class Handler(BaseHTTPRequestHandler):
     def _static(self, path: str) -> None:
         if path in ("/", "/index.html"):
             html = (STATIC / "index.html").read_text(encoding="utf-8")
-            html = html.replace("__TOKEN__", self.app.token).replace("__VERSION__", __version__)
+            html = html.replace("__VERSION__", __version__)
             return self.send_bytes(html.encode("utf-8"), "text/html; charset=utf-8")
         target = (STATIC / path.lstrip("/")).resolve()
         if STATIC.resolve() not in target.parents or not target.is_file():
