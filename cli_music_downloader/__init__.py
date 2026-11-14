@@ -6,7 +6,7 @@ Audio comes from YouTube Music, YouTube, SoundCloud or Audius; metadata from the
 iTunes Search API and Deezer; lyrics from LRCLIB.
 """
 
-__version__ = "2.0.0"
+__version__ = "2.1.0"
 __author__ = "Jordan Lang"
 __license__ = "MIT"
 __description__ = "Download music with metadata and album artwork, from a single song or an Apple Music song list"

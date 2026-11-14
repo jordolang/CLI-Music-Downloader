@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "CLI-Music-Downloader"
-version = "2.0.0"
+version = "2.1.0"
 description = "Download music (or a whole Apple Music song list PDF) as Artist/Title.mp3 with metadata, artwork and lyrics"
 readme = "README.md"
 license = {file = "LICENSE"}
@@ -31,6 +31,7 @@ classifiers = [
     "Intended Audience :: End Users/Desktop",
     "License :: OSI Approved :: MIT License",
     "Operating System :: MacOS",
+    "Operating System :: Microsoft :: Windows",
     "Operating System :: POSIX :: Linux",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.8",
